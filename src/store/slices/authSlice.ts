@@ -1,30 +1,36 @@
-import { createSlice } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit';
-import type { User } from '../../types';
-import Cookies from 'js-cookie';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-export interface AuthState {
+export interface User {
+  _id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: 'consumer' | 'store_owner' | 'admin';
+  isProfileComplete: boolean;
+  bodyMeasurements?: {
+    height: number;
+    weight: number;
+    chest: number;
+    waist: number;
+    hips: number;
+    inseam?: number;
+    shoulder?: number;
+  };
+}
+
+interface AuthState {
   user: User | null;
   token: string | null;
   loading: boolean;
   error: string | null;
 }
 
-// Load initial state from cookies
-const loadInitialState = (): AuthState => {
-  const token = Cookies.get('token') || null;
-  const userStr = Cookies.get('user');
-  const user = userStr ? JSON.parse(userStr) : null;
-
-  return {
-    user,
-    token,
-    loading: false,
-    error: null,
-  };
+const initialState: AuthState = {
+  user: null,
+  token: null,
+  loading: false,
+  error: null,
 };
-
-const initialState: AuthState = loadInitialState();
 
 const authSlice = createSlice({
   name: 'auth',
@@ -36,19 +42,27 @@ const authSlice = createSlice({
     ) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
+      state.loading = false;
+      state.error = null;
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
-    setError: (state, action: PayloadAction<string | null>) => {
+    setError: (state, action: PayloadAction<string>) => {
       state.error = action.payload;
+      state.loading = false;
     },
     logout: (state) => {
       state.user = null;
       state.token = null;
+      state.loading = false;
+      state.error = null;
+    },
+    clearError: (state) => {
+      state.error = null;
     },
   },
 });
 
-export const { setCredentials, setLoading, setError, logout } = authSlice.actions;
-export default authSlice.reducer; 
+export const { setCredentials, setLoading, setError, logout, clearError } = authSlice.actions;
+export default authSlice.reducer;
